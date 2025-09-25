@@ -1,0 +1,14 @@
+<script setup>
+import ProgressSpinner from 'primevue/progressspinner'
+</script>
+
+<template>
+  <div class="flex justify-center items-center w-full">
+    <ProgressSpinner
+      style="width: 50px; height: 50px"
+      stroke-width="8"
+      fill="transparent"
+      animation-duration=".5s"
+    />
+  </div>
+</template>
