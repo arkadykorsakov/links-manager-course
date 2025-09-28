@@ -1,17 +1,22 @@
-import { useRequest } from '@/composables/useRequest.js'
 import { supabase } from '@/supabase.js'
+import { useRequest } from '@/composables/useRequest.js'
+import { useLinksStore } from '@/stores/linksStore.js'
 
 export function useAuth() {
   const { loading, errorMessage, handleRequest } = useRequest()
-
+  const { clearLinks } = useLinksStore()
   const signUp = async ({ email, password, firstname }) => {
     return await handleRequest(async () => {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
       })
-      await supabase.from('users').insert([{ id: data.user.id, firstname, email }])
       if (error) throw error
+
+      if (data.user) {
+        await supabase.from('users').insert([{ id: data.user.id, firstname, email }])
+      }
+
       return data
     })
   }
@@ -30,7 +35,7 @@ export function useAuth() {
   const resetPassword = async (email) => {
     return await handleRequest(async () => {
       const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `https://links-manager-course-vue.netlify.app/reset-password`,
+        redirectTo: 'https://links-manager-course-vue.netlify.app/reset-password',
       })
       if (error) throw error
       return data
@@ -46,8 +51,10 @@ export function useAuth() {
   }
 
   const signInWithGithub = async () => {
-    return await handleRequest(async () => {
-      const { data, error } = await supabase.auth.signInWithOAuth({ provider: 'github' })
+    await handleRequest(async () => {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+      })
       if (error) throw error
       return data
     })
@@ -57,6 +64,7 @@ export function useAuth() {
     return await handleRequest(async () => {
       const { data, error } = await supabase.auth.signOut()
       if (error) throw error
+      clearLinks()
       return data
     })
   }
@@ -65,10 +73,10 @@ export function useAuth() {
     signUp,
     signIn,
     resetPassword,
-    loading,
-    errorMessage,
     updatePassword,
     signInWithGithub,
     signOut,
+    loading,
+    errorMessage,
   }
 }

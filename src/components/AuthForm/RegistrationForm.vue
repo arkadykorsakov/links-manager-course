@@ -2,15 +2,22 @@
 import { ref } from 'vue'
 import { z } from 'zod'
 import { zodResolver } from '@primevue/forms/resolvers/zod'
+import { useToastNotifications } from '@/composables/useToastNotifications.js'
+import { useAuth } from '@/composables/useAuth.js'
 import { Form } from '@primevue/forms'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Message from 'primevue/message'
-import { useToastNotifications } from '@/composables/useToastNotifications.js'
-import { useAuth } from '@/composables/useAuth.js'
+import Toast from 'primevue/toast'
+import { useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/userStore.js'
 
 const { showToast } = useToastNotifications()
-const { signUp, loading, errorMessage, signInWithGithub } = useAuth()
+const { signUp, signInWithGithub, loading, errorMessage } = useAuth()
+
+const router = useRouter()
+
+const authStore = useUserStore()
 
 const formData = ref({
   email: '',
@@ -21,7 +28,7 @@ const formData = ref({
 const rules = z.object({
   firstname: z.string().min(1, { message: 'Имя обязательно для заполнения' }),
   email: z.string().email({ message: 'Некорректный email' }),
-  password: z.string().min(6, { message: 'Должно быть минимум 6 символов' }),
+  password: z.string().min(5, { message: 'Должно быть минимум 6 символов' }),
 })
 
 const resolver = ref(zodResolver(rules))
@@ -35,7 +42,9 @@ const submitForm = async ({ valid }) => {
       password: formData.value.password,
       firstname: formData.value.firstname,
     })
-    showToast('success', 'Регистрация', 'Вы успешно зарегистрировались')
+    await authStore.getUser()
+    showToast('success', 'Вход', 'Вы успешно вошли в систему')
+    await router.replace({ name: 'home' })
   } catch {
     showToast('error', 'Ошибка регистрации', errorMessage.value)
   }
@@ -43,6 +52,7 @@ const submitForm = async ({ valid }) => {
 </script>
 
 <template>
+  <Toast />
   <Form
     v-slot="$form"
     :initial-values="formData"
@@ -90,12 +100,11 @@ const submitForm = async ({ valid }) => {
     <div class="grid grid-cols-2 gap-3">
       <Button type="submit" class="w-full" label="Регистрация" :loading="loading" />
       <Button
-        @click="signInWithGithub"
-        type="button"
         icon="pi pi-github"
         class="w-full"
         label="GitHub"
         severity="contrast"
+        @click="signInWithGithub"
       />
     </div>
   </Form>

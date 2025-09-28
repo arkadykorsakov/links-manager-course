@@ -7,7 +7,6 @@ export function useRequest() {
   const handleRequest = async (fn) => {
     errorMessage.value = ''
     loading.value = true
-
     try {
       return await fn()
     } catch (error) {

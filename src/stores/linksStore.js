@@ -1,6 +1,6 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ref } from 'vue'
-import { supabase } from '@/supabase.js'
+import { supabase } from '@/supabase'
 
 const LIMIT = 6
 
@@ -13,6 +13,15 @@ export const useLinksStore = defineStore('links', () => {
   const hasMore = ref(true)
   const offset = ref(0)
 
+  const clearLinks = () => {
+    offset.value = 0
+    totalLinks.value = 0
+    links.value = []
+    hasMore.value = false
+    sortByPopular.value = false
+    onlyFavorites.value = false
+  }
+
   const fetchLinks = async (resetPages = false, resetFilters = false) => {
     isLoading.value = true
 
@@ -23,21 +32,20 @@ export const useLinksStore = defineStore('links', () => {
     }
 
     if (resetFilters) {
-      onlyFavorites.value = false
       sortByPopular.value = false
+      onlyFavorites.value = false
     }
 
     try {
       let query = supabase
         .from('links')
         .select(
-          'id, name, url, description, is_favorite, preview_image, click_count, categories (id, name)',
+          'id, name, url, description, is_favorite, preview_image, categories (id, name), click_count',
           { count: 'exact' },
         )
         .range(offset.value, offset.value + LIMIT - 1)
-      if (onlyFavorites.value) {
-        query = query.eq('is_favorite', true)
-      }
+
+      if (onlyFavorites.value) query = query.eq('is_favorite', true)
       if (sortByPopular.value) {
         query = query.order('click_count', { ascending: false })
       } else {
@@ -45,26 +53,21 @@ export const useLinksStore = defineStore('links', () => {
       }
 
       const { data, error, count } = await query
+      if (!data) {
+        clearLinks()
+        return
+      }
       totalLinks.value = count
       offset.value += data.length
-      if (error) {
-        throw error
-      }
+      if (error) throw error
+
       links.value.push(...data)
       hasMore.value = offset.value < totalLinks.value
     } catch (e) {
-      console.log(e)
+      console.error('Ошибка загрузки', e)
     } finally {
       isLoading.value = false
     }
-  }
-
-  const removeLink = async (id) => {
-    const { error } = await supabase.from('links').delete().eq('id', id)
-    if (error) {
-      throw error
-    }
-    links.value = links.value.filter((link) => link.id !== id)
   }
 
   const changeIsFavorite = async (id) => {
@@ -78,6 +81,12 @@ export const useLinksStore = defineStore('links', () => {
       if (error) throw error
       links.value[index].is_favorite = newFavorite
     }
+  }
+
+  const removeLink = async (id) => {
+    const { error } = await supabase.from('links').delete().eq('id', id)
+    if (error) throw error
+    links.value = links.value.filter((link) => link.id !== id)
   }
 
   const addClickCount = async (id) => {
@@ -95,16 +104,16 @@ export const useLinksStore = defineStore('links', () => {
   }
 
   return {
-    links,
     isLoading,
-    fetchLinks,
-    removeLink,
-    changeIsFavorite,
-    addClickCount,
+    links,
+    hasMore,
     onlyFavorites,
     sortByPopular,
-    hasMore,
-    offset,
+    fetchLinks,
+    changeIsFavorite,
+    removeLink,
+    addClickCount,
+    clearLinks,
   }
 })
 

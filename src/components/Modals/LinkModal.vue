@@ -186,12 +186,7 @@ const textHeader = computed(() => {
 
 <template>
   <Toast />
-  <Dialog
-    modal
-    :header="textHeader"
-    v-model:visible="modelValue"
-    :style="{ width: '25rem' }"
-  >
+  <Dialog modal :header="textHeader" v-model:visible="modelValue" :style="{ width: '25rem' }">
     <Form
       v-slot="$form"
       :initial-values="formInputs"
@@ -202,53 +197,58 @@ const textHeader = computed(() => {
     >
       <AppLoader v-if="isLoading" />
       <template v-else>
-        <div class="mb-3">
-          <InputText
-            name="name"
-            v-model="formInputs.name"
-            class="w-full"
-            autocomplete="off"
-            placeholder="Название ссылки"
-          />
-          <Message v-if="$form.name?.invalid" severity="error" variant="simple" size="small">
-            {{ $form.name.error.message }}
-          </Message>
+        <div class="fond-bold text-center" v-if="!listCategories.length">
+          Сначала нужно добавить категории
         </div>
-        <div class="mb-3">
-          <InputText
-            name="url"
-            v-model="formInputs.url"
-            class="w-full"
-            autocomplete="off"
-            placeholder="Ссылка"
-          />
-          <Message v-if="$form.url?.invalid" severity="error" variant="simple" size="small">
-            {{ $form.url.error.message }}
-          </Message>
-        </div>
-        <div class="mb-3">
-          <Select
-            v-model="formInputs.category"
-            :options="listCategories"
-            optionLabel="name"
-            placeholder="Выберите категорию"
-            class="w-full"
-          />
-        </div>
-        <div class="mb-3">
-          <Textarea
-            v-model="formInputs.description"
-            class="w-full"
-            style="resize: none"
-            placeholder="Описание"
-          />
-        </div>
-        <div class="mb-3 flex items-center gap-2">
-          <Checkbox v-model="formInputs.isFavorite" inputId="isFavorite" binary />
-          <label for="isFavorite">Добавить в избранное</label>
-        </div>
-        <div class="flex justify-end gap-2 mt-4">
-          <Button :label="textButton" :loading="isSubmitting" type="submit" />
+        <div v-else>
+          <div class="mb-3">
+            <InputText
+              name="name"
+              v-model="formInputs.name"
+              class="w-full"
+              autocomplete="off"
+              placeholder="Название ссылки"
+            />
+            <Message v-if="$form.name?.invalid" severity="error" variant="simple" size="small">
+              {{ $form.name.error.message }}
+            </Message>
+          </div>
+          <div class="mb-3">
+            <InputText
+              name="url"
+              v-model="formInputs.url"
+              class="w-full"
+              autocomplete="off"
+              placeholder="Ссылка"
+            />
+            <Message v-if="$form.url?.invalid" severity="error" variant="simple" size="small">
+              {{ $form.url.error.message }}
+            </Message>
+          </div>
+          <div class="mb-3">
+            <Select
+              v-model="formInputs.category"
+              :options="listCategories"
+              optionLabel="name"
+              placeholder="Выберите категорию"
+              class="w-full"
+            />
+          </div>
+          <div class="mb-3">
+            <Textarea
+              v-model="formInputs.description"
+              class="w-full"
+              style="resize: none"
+              placeholder="Описание"
+            />
+          </div>
+          <div class="mb-3 flex items-center gap-2">
+            <Checkbox v-model="formInputs.isFavorite" inputId="isFavorite" binary />
+            <label for="isFavorite">Добавить в избранное</label>
+          </div>
+          <div class="flex justify-end gap-2 mt-4">
+            <Button :label="textButton" :loading="isSubmitting" type="submit" />
+          </div>
         </div>
       </template>
     </Form>
